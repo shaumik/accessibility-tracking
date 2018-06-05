@@ -16,7 +16,7 @@ from imutils.video import VideoStream
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video",
 	help="path to the (optional) video file")
-ap.add_argument("-b", "--buffer", type=int, default=64,
+ap.add_argument("-b", "--buffer", type=int, default=256,
 	help="max buffer size")
 args = vars(ap.parse_args())
 
@@ -98,23 +98,55 @@ while True:
 		if len(pts) == 0:
 			#print('here', pts)
 			continue
-		increasing = 0
-		decreasing = 0
+		xIncreasing = 0
+		yIncreasing = 0
+		xDecreasing = 0
+		yDecreasing = 0
+		offset = 2
+		threshold = 0.6
 		for k in range(1, len(pts) - 2):
-			print(pts[k-1], '---------------- ', pts[k + 1])
-			if pts[k-1] is None or pts[k + 1] is None:
+			# print('here1')
+			# print(str(pts[k-1]) + ' -- ' + str(pts[k+1]))
+			#print(pts[k-1], '---------------- ', pts[k + 1])
+			if pts[k-offset] is None or pts[k + offset] is None:
 				continue
-			xOld = pts[k-1][0]
-			xNew = pts[k + 1][0]
+			xOld = pts[k-offset][0]
+			xNew = pts[k + offset][0]
+			yOld = pts[k-offset][1]
+			yNew = pts[k + offset][1]
+
+
+
 			if xOld > xNew:
-				increasing += 1
-			else:
-				decreasing += 1
-		#print(increasing/len(pts))
-		if(increasing/len(pts) > 0.7):
-			print("Increasing")
-		elif(decreasing/len(pts) > 0.7):
-			print("Decreasing")
+				xIncreasing += 1
+			elif xOld < xNew:
+				xDecreasing += 1
+			if yOld > yNew:
+				yIncreasing += 1
+			elif yOld < yNew:
+				yDecreasing += 1
+
+
+		horizontal = max(xIncreasing, xDecreasing)
+		vertical = max(yIncreasing, yDecreasing)
+
+
+		if horizontal > vertical:
+			print('xIncreasing'+'-----'+str(xIncreasing/len(pts)))
+			print('xDecreasing'+'-----'+str(xDecreasing/len(pts)))
+			# horizontal gesture1
+			if(xIncreasing/len(pts) > threshold):
+				print("Left")
+			elif(xDecreasing/len(pts) > threshold):
+				print("Right")
+		elif vertical > horizontal:
+			print('yIncreasing'+'-----'+str(yIncreasing/len(pts)))
+			print('yDecreasing'+'-----'+str(yDecreasing/len(pts)))
+			if(yIncreasing/len(pts) > threshold):
+				print("Down")
+			elif(yDecreasing/len(pts) > threshold):
+				print("UP")
+
 		pts.clear()
 
 	# update the points queue
