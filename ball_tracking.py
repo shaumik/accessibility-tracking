@@ -11,20 +11,21 @@ import imutils
 import time
 from collections import deque
 from imutils.video import VideoStream
+import keyboard
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video",
 	help="path to the (optional) video file")
-ap.add_argument("-b", "--buffer", type=int, default=248,
+ap.add_argument("-b", "--buffer", type=int, default=64,
 	help="max buffer size")
 args = vars(ap.parse_args())
 
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower = (0, 0, 255)
-greenUpper = (50, 255, 255)
+greenLower = (29, 86, 6)
+greenUpper = (64, 255, 255)
 pts = deque(maxlen=args["buffer"])
 
 # if a video path was not supplied, grab the reference
@@ -56,7 +57,7 @@ while True:
 
 	# resize the frame, blur it, and convert it to the HSV
 	# color space
-	#frame = imutils.resize(frame, width=600)
+	frame = imutils.resize(frame, width=600)
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
@@ -64,7 +65,7 @@ while True:
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
 	mask = cv2.inRange(hsv, greenLower, greenUpper)
-	# mask = cv2.erode(mask, None, iterations=2)
+	mask = cv2.erode(mask, None, iterations=2)
 	mask = cv2.dilate(mask, None, iterations=2)
 
 	# find contours in the mask and initialize the current
@@ -132,20 +133,22 @@ while True:
 
 
 		if horizontal > vertical:
-			print('xIncreasing'+'-----'+str(xIncreasing/len(pts)))
-			print('xDecreasing'+'-----'+str(xDecreasing/len(pts)))
 			# horizontal gesture1
 			if(xIncreasing/len(pts) > threshold):
-				print("Left")
+				print("---------------")
+				print("Right\n")
+				keyboard.press_and_release('right')
 			elif(xDecreasing/len(pts) > threshold):
-				print("Right")
+				print("---------------")
+				print("Left\n")
+				keyboard.press_and_release('left')
 		elif vertical > horizontal:
-			print('yIncreasing'+'-----'+str(yIncreasing/len(pts)))
-			print('yDecreasing'+'-----'+str(yDecreasing/len(pts)))
 			if(yIncreasing/len(pts) > threshold):
-				print("Down")
+				print("---------------")
+				print("Mute\n")
 			elif(yDecreasing/len(pts) > threshold):
-				print("UP")
+				print("---------------")
+				print("Unmute\n")
 
 		pts.clear()
 
@@ -165,6 +168,7 @@ while True:
 		cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
 		firstTime = False
 	# show the frame to our screen
+	cv2.flip(frame, 1)
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
 

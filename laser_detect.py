@@ -29,7 +29,6 @@ lastInsertedTime = None
 TIME_THRESHOLD = 1000
 
 while (1):
-	pdb.set_trace()
 	# Take each frame
 	ret, frame = cap.read()
 	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
